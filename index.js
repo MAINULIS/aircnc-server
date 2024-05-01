@@ -31,6 +31,19 @@ async function run() {
     const roomsCollection = client.db('aircncDB').collection('rooms')
     const bookingsCollection = client.db('aircncDB').collection('bookings')
 
+    // save user email and role in db when login or sinUp
+    app.put('/users/:email', async(req, res) => {
+        const email = req.params.email;
+        const user = req.body;
+        const query = { email: email};
+        const options = {upsert: true};
+        const updateDoc = {
+            $set: user,
+        }
+        const result = await usersCollection.updateOne(query, updateDoc, options);
+        res.send(result);
+    })
+
     // Send a ping to confirm a successful connection
     await client.db('admin').command({ ping: 1 })
     console.log(
