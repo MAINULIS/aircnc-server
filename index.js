@@ -31,6 +31,7 @@ async function run() {
     const roomsCollection = client.db('aircncDB').collection('rooms')
     const bookingsCollection = client.db('aircncDB').collection('bookings')
 
+    //1. user related apis
     // save user email and role in db when login or sinUp
     app.put('/users/:email', async(req, res) => {
         const email = req.params.email;
@@ -42,6 +43,90 @@ async function run() {
         }
         const result = await usersCollection.updateOne(query, updateDoc, options);
         res.send(result);
+    })
+
+    // get user
+    app.get('/users/:email', async(req, res) =>{
+      const email = req.params.email;
+      const query = {email: email};
+      const result = await usersCollection.findOne(query);
+      res.send(result);
+    })
+
+    // 2. room apis
+    // save a room in  database
+    app.post('/rooms', async(req, res) => {
+      const room = req.body;
+      const result = await roomsCollection.insertOne(room);
+      res.send(result);
+    })
+    // get a single room data by id
+    app.get('/room/:id', async(req, res) => {
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)};
+      const result = await roomsCollection.findOne(query);
+      res.send(result);
+    })
+
+    // get all posted room by email
+    app.get('/rooms/:email', async(req, res) => {
+      const email = req.query.email;
+      const query = {email: email};
+      const result = await roomsCollection.find(query).toArray();
+      res.send(result);
+    })
+    // get all room data
+    app.get('/rooms', async(req, res) => {
+      const result = await roomsCollection.find().toArray();
+      res.send(result);
+    })
+
+    // delete posted room by id
+    app.delete('/rooms/:id', async(req, res) => {
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)};
+      const result = await roomsCollection.deleteOne(query);
+      res.send(result)
+    })
+    // update booking room status
+    app.patch('/rooms/status/:id', async(req, res) => {
+      const id = req.params.id;
+      const status = req.body.status;
+      const query = { _id: new ObjectId(id)}
+      const updateDoc = {
+        $set: {
+          booked: status,
+        }
+      }
+      const update = await roomsCollection.updateOne(query, updateDoc);
+      res.send(update)
+    })
+
+    // 3. booking related apis
+    // save booking info in db
+    app.post('/bookings', async(req, res) => {
+      const booking = req.body;
+      const result = await bookingsCollection.insertOne(booking);
+      res.send(result);
+    })
+
+    // get booking data for guest by email
+    app.get('/bookings', async(req, res) => {
+      const email = req.query.email;
+      if(!email){
+        res.send([])
+      }
+      const query = {'guest.email': email};
+      const result = await bookingsCollection.find(query).toArray();
+      res.send(result);
+    })
+
+    // delete a booking
+    app.delete('/bookings/:id', async(req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id)};
+      const result = await bookingsCollection.deleteOne(query);
+      res.send(result)
     })
 
     // Send a ping to confirm a successful connection
